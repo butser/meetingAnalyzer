@@ -9,22 +9,18 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Get API key from environment
-api_key = os.getenv("OPENAI_API_KEY")
-
-if not api_key:
-    print("Error: OPENAI_API_KEY not found in environment")
-    print("Please set it in .env file or as environment variable")
-    exit(1)
-
-# Example 1: Basic usage
-print("Example 1: Basic Analysis")
+# Example 1: Basic usage with local models (default)
+print("Example 1: Basic Analysis with Local Models")
 print("-" * 60)
 
 analyzer = MeetingAnalyzer(
     video_path="path/to/your/meeting.mp4",
-    openai_api_key=api_key,
     output_dir="output/example1"
+    # Uses default local configuration:
+    # - LM Studio at http://localhost:1234/v1
+    # - Text model: phi-3-mini
+    # - Vision model: llava-7b-q4
+    # - Whisper model: small
 )
 
 results = analyzer.analyze(project_name="Example Project")
@@ -33,16 +29,17 @@ print(f"\nGenerated SRS: {results.get('srs_markdown')}")
 print(f"Requirements JSON: {results.get('requirements_json')}")
 
 
-# Example 2: Custom configuration
-print("\n\nExample 2: Custom Configuration")
+# Example 2: Custom local model configuration
+print("\n\nExample 2: Custom Local Model Configuration")
 print("-" * 60)
 
 analyzer = MeetingAnalyzer(
     video_path="path/to/your/meeting.mp4",
-    openai_api_key=api_key,
-    output_dir="output/example2",
-    openai_model="gpt-4o",  # Use GPT-4o for better vision analysis
-    whisper_model="whisper-1"
+    lm_studio_url="http://localhost:1234/v1",
+    text_model="llama-3.2-3b",  # Custom text model
+    vision_model="llava-7b-q4",  # Custom vision model
+    whisper_model="medium",      # Use medium Whisper model
+    output_dir="output/example2"
 )
 
 results = analyzer.analyze(
@@ -58,7 +55,6 @@ print("-" * 60)
 
 analyzer = MeetingAnalyzer(
     video_path="path/to/your/meeting.mp4",
-    openai_api_key=api_key,
     output_dir="output/example3"
 )
 
@@ -75,7 +71,6 @@ print("-" * 60)
 
 analyzer = MeetingAnalyzer(
     video_path="path/to/your/meeting.mp4",
-    openai_api_key=api_key,
     output_dir="output/example4"
 )
 
@@ -95,5 +90,27 @@ if 'video_metadata' in results:
 # Access requirements
 if 'requirements' in results:
     print(f"\nRequirements extracted: {len(results['requirements'])} sections")
+
+
+# Example 5: Backward compatibility with OpenAI (optional)
+print("\n\nExample 5: Backward Compatibility with OpenAI")
+print("-" * 60)
+
+# Get API key from environment (optional)
+api_key = os.getenv("OPENAI_API_KEY")
+
+if api_key:
+    analyzer = MeetingAnalyzer(
+        video_path="path/to/your/meeting.mp4",
+        openai_api_key=api_key,
+        openai_model="gpt-4o",  # Use GPT-4o for vision/text
+        openai_whisper_model="whisper-1",  # Use OpenAI Whisper
+        output_dir="output/example5"
+    )
+    
+    results = analyzer.analyze(project_name="OpenAI Project")
+    print(f"Generated SRS: {results.get('srs_markdown')}")
+else:
+    print("Skipped: OPENAI_API_KEY not set (this is optional)")
 
 print("\n✓ All examples complete!")
