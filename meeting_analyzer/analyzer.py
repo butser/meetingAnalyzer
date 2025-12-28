@@ -4,7 +4,7 @@ Main meeting analyzer orchestrator
 
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable
 import json
 
 from .video_processor import VideoProcessor
@@ -26,7 +26,8 @@ class MeetingAnalyzer:
                  output_dir: str = "output",
                  openai_api_key: Optional[str] = None,
                  openai_model: Optional[str] = None,
-                 openai_whisper_model: Optional[str] = None):
+                 openai_whisper_model: Optional[str] = None,
+                 progress_callback: Optional[Callable[[int, int, str, Optional[str]], None]] = None):
         """
         Initialize the meeting analyzer
         
@@ -41,6 +42,7 @@ class MeetingAnalyzer:
             openai_api_key: OpenAI API key (optional, for backward compatibility)
             openai_model: OpenAI model to use (optional, for backward compatibility)
             openai_whisper_model: OpenAI Whisper model (optional, for backward compatibility)
+            progress_callback: Optional callback for progress updates (step, total_steps, message, error)
         """
         self.video_path = video_path
         self.lm_studio_url = lm_studio_url
@@ -52,6 +54,7 @@ class MeetingAnalyzer:
         self.openai_api_key = openai_api_key
         self.openai_model = openai_model
         self.openai_whisper_model = openai_whisper_model
+        self.progress_callback = progress_callback
         
         # Create output directories
         os.makedirs(output_dir, exist_ok=True)
@@ -92,9 +95,15 @@ class MeetingAnalyzer:
         print(f"Output Directory: {self.output_dir}")
         print()
         
+        # Notify start
+        if self.progress_callback:
+            self.progress_callback(0, 5, "Starting analysis...", None)
+        
         # Step 1: Extract video frames
         print("Step 1: Extracting video frames...")
         print("-" * 60)
+        if self.progress_callback:
+            self.progress_callback(1, 5, "Step 1: Extracting video frames...", None)
         try:
             if extract_key_frames:
                 frame_paths = self.video_processor.extract_key_frames(
@@ -113,11 +122,15 @@ class MeetingAnalyzer:
             print()
         except Exception as e:
             print(f"✗ Error extracting frames: {str(e)}")
+            if self.progress_callback:
+                self.progress_callback(1, 5, "Error extracting frames", str(e))
             self.results['frame_paths'] = []
         
         # Step 2: Extract and transcribe audio
         print("Step 2: Extracting and transcribing audio...")
         print("-" * 60)
+        if self.progress_callback:
+            self.progress_callback(2, 5, "Step 2: Extracting and transcribing audio...", None)
         try:
             audio_path = self.audio_processor.extract_audio()
             
@@ -144,6 +157,8 @@ class MeetingAnalyzer:
             print()
         except Exception as e:
             print(f"✗ Error processing audio: {str(e)}")
+            if self.progress_callback:
+                self.progress_callback(2, 5, "Error processing audio", str(e))
             self.results['transcription'] = {
                 'text': f'Error: {str(e)}',
                 'status': 'error'
@@ -152,6 +167,8 @@ class MeetingAnalyzer:
         # Step 3: Analyze frames with AI
         print("Step 3: Analyzing visual content with AI...")
         print("-" * 60)
+        if self.progress_callback:
+            self.progress_callback(3, 5, "Step 3: Analyzing visual content with AI...", None)
         try:
             if frame_paths:
                 # Limit frames for efficiency
@@ -167,11 +184,15 @@ class MeetingAnalyzer:
             print()
         except Exception as e:
             print(f"✗ Error analyzing frames: {str(e)}")
+            if self.progress_callback:
+                self.progress_callback(3, 5, "Error analyzing frames", str(e))
             self.results['frame_analyses'] = []
         
         # Step 4: Generate requirements
         print("Step 4: Generating requirements...")
         print("-" * 60)
+        if self.progress_callback:
+            self.progress_callback(4, 5, "Step 4: Generating requirements...", None)
         try:
             requirements = self.ai_analyzer.generate_requirements(
                 self.results.get('transcription', {}),
@@ -182,11 +203,15 @@ class MeetingAnalyzer:
             print()
         except Exception as e:
             print(f"✗ Error generating requirements: {str(e)}")
+            if self.progress_callback:
+                self.progress_callback(4, 5, "Error generating requirements", str(e))
             self.results['requirements'] = {'error': str(e)}
         
         # Step 5: Generate SRS documents
         print("Step 5: Generating SRS documents...")
         print("-" * 60)
+        if self.progress_callback:
+            self.progress_callback(5, 5, "Step 5: Generating SRS documents...", None)
         try:
             markdown_path = self.srs_generator.generate_markdown(
                 self.results.get('requirements', {}),
@@ -212,6 +237,8 @@ class MeetingAnalyzer:
             print()
         except Exception as e:
             print(f"✗ Error generating SRS: {str(e)}")
+            if self.progress_callback:
+                self.progress_callback(5, 5, "Error generating SRS", str(e))
         
         # Save complete results
         results_path = os.path.join(self.output_dir, "analysis_results.json")
@@ -229,5 +256,8 @@ class MeetingAnalyzer:
         print("=" * 60)
         print(f"Results saved to: {results_path}")
         print()
+        
+        if self.progress_callback:
+            self.progress_callback(5, 5, "Analysis complete!", None)
         
         return self.results

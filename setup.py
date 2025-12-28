@@ -21,6 +21,7 @@ setup(
     entry_points={
         "console_scripts": [
             "meeting-analyzer=meeting_analyzer.cli:main",
+            "meeting-analyzer-gui=meeting_analyzer.gui:main",
         ],
     },
 )
