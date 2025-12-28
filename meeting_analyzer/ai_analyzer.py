@@ -62,8 +62,12 @@ class AIAnalyzer:
             try:
                 base64_image = self.encode_image(frame_path)
                 
+                # Select appropriate model for vision analysis
+                # GPT-4o and GPT-4 Turbo support vision
+                vision_model = "gpt-4o" if "gpt-4o" in self.model.lower() else "gpt-4-turbo"
+                
                 response = self.client.chat.completions.create(
-                    model="gpt-4o" if "gpt-4o" in self.model else "gpt-4-turbo",
+                    model=vision_model,
                     messages=[
                         {
                             "role": "user",
@@ -190,12 +194,15 @@ Provide a comprehensive but concise analysis in JSON format."""
             
             content = response.choices[0].message.content
             
-            # Try to parse as JSON, fallback to text
+            # Try to parse as JSON, fallback to text if parsing fails
             try:
                 requirements = json.loads(content)
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as json_error:
+                # JSON parsing failed - provide structured fallback
+                print(f"Note: AI response was not in JSON format, using text format")
                 requirements = {
-                    "raw_analysis": content
+                    "raw_analysis": content,
+                    "note": "AI returned text format instead of JSON"
                 }
             
             print("Requirements generation complete")

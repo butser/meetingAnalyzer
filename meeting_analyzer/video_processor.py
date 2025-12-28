@@ -141,8 +141,15 @@ class VideoProcessor:
             "frame_count": int(cap.get(cv2.CAP_PROP_FRAME_COUNT)),
             "width": int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
             "height": int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
-            "duration_seconds": cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
         }
+        
+        # Calculate duration, handling zero FPS case
+        fps = metadata["fps"]
+        frame_count = metadata["frame_count"]
+        if fps > 0:
+            metadata["duration_seconds"] = frame_count / fps
+        else:
+            metadata["duration_seconds"] = 0
         
         cap.release()
         return metadata

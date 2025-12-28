@@ -65,6 +65,8 @@ class AudioProcessor:
         except subprocess.CalledProcessError as e:
             # Audio extraction failed - ffmpeg may not be installed or video may not have audio
             print("Audio extraction failed. Ensure ffmpeg is installed.")
+            if e.stderr:
+                print(f"Error details: {e.stderr}")
             print("Note: Install ffmpeg for audio extraction support")
             return None
         except FileNotFoundError:
