@@ -15,7 +15,8 @@ class AIAnalyzer:
     def __init__(self, 
                  lm_studio_url: str = "http://localhost:1234/v1",
                  text_model: str = "phi-3-mini",
-                 vision_model: str = "llava-7b-q4"):
+                 vision_model: str = "llava-7b-q4",
+                 vision_on_cpu: bool = False):
         """
         Initialize the AI analyzer with LM Studio
         
@@ -23,10 +24,12 @@ class AIAnalyzer:
             lm_studio_url: LM Studio base URL (default: http://localhost:1234/v1)
             text_model: Text model name (default: phi-3-mini)
             vision_model: Vision model name (default: llava-7b-q4)
+            vision_on_cpu: Whether to run vision model on CPU (default: False)
         """
         self.lm_studio_url = lm_studio_url
         self.text_model = text_model
         self.vision_model = vision_model
+        self.vision_on_cpu = vision_on_cpu
         
         try:
             # Use OpenAI client library with LM Studio endpoint
@@ -67,6 +70,8 @@ class AIAnalyzer:
         results = []
         
         print(f"Analyzing {len(frame_paths)} frames...")
+        if self.vision_on_cpu:
+            print("  Note: Using CPU mode for vision analysis (may be slower)")
         
         for i, frame_path in enumerate(frame_paths):
             print(f"  Analyzing frame {i+1}/{len(frame_paths)}: {frame_path}")

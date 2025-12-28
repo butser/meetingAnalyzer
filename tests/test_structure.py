@@ -29,6 +29,7 @@ class TestStructure(unittest.TestCase):
             'meeting_analyzer/ai_analyzer.py',
             'meeting_analyzer/srs_generator.py',
             'meeting_analyzer/cli.py',
+            'meeting_analyzer/profiles.py',
             'requirements.txt',
             'setup.py',
             'README.md',
@@ -54,6 +55,7 @@ class TestStructure(unittest.TestCase):
             'meeting_analyzer/ai_analyzer.py',
             'meeting_analyzer/srs_generator.py',
             'meeting_analyzer/cli.py',
+            'meeting_analyzer/profiles.py',
             'setup.py',
             'example_usage.py'
         ]

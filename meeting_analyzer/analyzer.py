@@ -22,6 +22,7 @@ class MeetingAnalyzer:
                  text_model: str = "phi-3-mini",
                  vision_model: str = "llava-7b-q4",
                  whisper_model: str = "small",
+                 vision_on_cpu: bool = False,
                  output_dir: str = "output",
                  openai_api_key: Optional[str] = None,
                  openai_model: Optional[str] = None,
@@ -35,6 +36,7 @@ class MeetingAnalyzer:
             text_model: Text model name for LM Studio (default: phi-3-mini)
             vision_model: Vision model name for LM Studio (default: llava-7b-q4)
             whisper_model: Local Whisper model size (default: small)
+            vision_on_cpu: Whether to run vision model on CPU (default: False)
             output_dir: Directory for output files
             openai_api_key: OpenAI API key (optional, for backward compatibility)
             openai_model: OpenAI model to use (optional, for backward compatibility)
@@ -45,6 +47,7 @@ class MeetingAnalyzer:
         self.text_model = text_model
         self.vision_model = vision_model
         self.whisper_model = whisper_model
+        self.vision_on_cpu = vision_on_cpu
         self.output_dir = output_dir
         self.openai_api_key = openai_api_key
         self.openai_model = openai_model
@@ -58,7 +61,7 @@ class MeetingAnalyzer:
         # Initialize processors
         self.video_processor = VideoProcessor(video_path, self.frames_dir)
         self.audio_processor = AudioProcessor(video_path, self.audio_dir)
-        self.ai_analyzer = AIAnalyzer(lm_studio_url, text_model, vision_model)
+        self.ai_analyzer = AIAnalyzer(lm_studio_url, text_model, vision_model, vision_on_cpu)
         self.srs_generator = SRSGenerator(output_dir)
         
         self.results = {}
