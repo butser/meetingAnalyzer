@@ -17,6 +17,7 @@ It produces comprehensive SRS documentation including:
 
 ## Features
 
+- 🖥️ **Graphical User Interface**: Easy-to-use GUI with real-time progress updates
 - 🎥 **Video Frame Extraction**: Intelligent key frame detection or interval-based extraction
 - 🎤 **Local Audio Transcription**: GPU-accelerated Whisper model (faster-whisper)
 - 🤖 **Local AI Analysis**: LM Studio with vision and text models
@@ -116,6 +117,28 @@ LM_STUDIO_URL=http://localhost:1234/v1
 ```
 
 ## Usage
+
+### GUI Mode (Recommended for Beginners)
+
+Launch the graphical user interface for an easy interactive experience:
+
+```bash
+meeting-analyzer-gui
+```
+
+The GUI provides:
+- File browser for video selection
+- Hardware profile selector (laptop/pc/custom)
+- Real-time progress bar and status updates
+- Color-coded log with detailed information
+- One-click access to generated files
+- Error handling with helpful messages
+
+For detailed GUI documentation, see [GUI_DOCUMENTATION.md](GUI_DOCUMENTATION.md).
+
+### Command-Line Mode
+
+For automation and scripting, use the CLI:
 
 ## Hardware Profiles
 
