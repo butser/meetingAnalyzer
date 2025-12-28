@@ -1,0 +1,49 @@
+{
+  "meeting_analyzer": {
+    "version": "1.0.0",
+    "description": "AI-powered meeting analyzer for generating SRS documentation"
+  },
+  "default_settings": {
+    "openai_model": "gpt-4-turbo-preview",
+    "whisper_model": "whisper-1",
+    "output_directory": "output",
+    "frame_extraction": {
+      "method": "key_frames",
+      "interval_seconds": 10,
+      "max_key_frames": 15,
+      "scene_change_threshold": 30.0
+    },
+    "audio_extraction": {
+      "format": "wav",
+      "sample_rate": 16000,
+      "channels": 1
+    },
+    "analysis": {
+      "max_frames_to_analyze": 10,
+      "temperature": 0.3,
+      "max_tokens": 3000
+    }
+  },
+  "supported_video_formats": [
+    "mp4",
+    "avi",
+    "mov",
+    "mkv",
+    "flv",
+    "wmv"
+  ],
+  "output_formats": [
+    "markdown",
+    "docx",
+    "json"
+  ],
+  "srs_sections": [
+    "introduction",
+    "project_overview",
+    "functional_requirements",
+    "non_functional_requirements",
+    "technical_requirements",
+    "ui_ux_requirements",
+    "issues_and_concerns"
+  ]
+}
