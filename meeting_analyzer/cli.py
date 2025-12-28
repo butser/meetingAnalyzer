@@ -9,6 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from .analyzer import MeetingAnalyzer
+from .profiles import get_profile, list_profiles, get_profile_description
 
 
 def main():
@@ -20,6 +21,15 @@ def main():
 Examples:
   # Basic usage with local models (default)
   meeting-analyzer --video meeting.mp4
+  
+  # Use laptop profile (optimized for 4GB VRAM)
+  meeting-analyzer --video meeting.mp4 --profile laptop
+  
+  # Use PC profile (optimized for 24GB VRAM)
+  meeting-analyzer --video meeting.mp4 --profile pc
+  
+  # Use profile with custom override
+  meeting-analyzer --video meeting.mp4 --profile laptop --whisper-model medium
   
   # Specify custom LM Studio URL
   meeting-analyzer --video meeting.mp4 --lm-studio-url http://localhost:1234/v1
@@ -43,6 +53,13 @@ Examples:
         "--video",
         required=True,
         help="Path to the meeting video file"
+    )
+    
+    # Hardware profile
+    parser.add_argument(
+        "--profile",
+        choices=["laptop", "pc", "custom"],
+        help="Hardware profile: laptop (4GB VRAM), pc (24GB VRAM), or custom (manual settings)"
     )
     
     # LM Studio / Local AI options
@@ -128,11 +145,34 @@ Examples:
     # Load environment variables from .env file
     load_dotenv()
     
-    # Get configuration from args or environment variables
+    # Get profile from args or environment
+    profile_name = args.profile or os.getenv("HARDWARE_PROFILE")
+    
+    # Validate profile name if provided via environment variable
+    if profile_name and not args.profile and profile_name not in ["laptop", "pc", "custom"]:
+        print(f"Warning: Invalid profile '{profile_name}' in HARDWARE_PROFILE environment variable.")
+        print(f"  Valid profiles: laptop, pc, custom")
+        print("  Continuing with default settings")
+        profile_name = None
+    
+    # Load profile settings if specified
+    profile_settings = {}
+    if profile_name and profile_name != "custom":
+        try:
+            profile_settings = get_profile(profile_name)
+            print(f"Using hardware profile: {profile_name}")
+            print(f"  Description: {get_profile_description(profile_name)}")
+        except ValueError as e:
+            print(f"Warning: {str(e)}")
+            print("Continuing with default/custom settings")
+    
+    # Get configuration from args or profile or environment variables
+    # Priority: CLI args > profile settings > environment variables > defaults
     lm_studio_url = args.lm_studio_url or os.getenv("LM_STUDIO_URL", "http://localhost:1234/v1")
-    text_model = args.text_model or os.getenv("LM_STUDIO_MODEL", "phi-3-mini")
-    vision_model = args.vision_model or os.getenv("LM_STUDIO_VISION_MODEL", "llava-7b-q4")
-    whisper_model = args.whisper_model or os.getenv("WHISPER_MODEL", "small")
+    text_model = args.text_model or profile_settings.get("text_model") or os.getenv("LM_STUDIO_MODEL", "phi-3-mini")
+    vision_model = args.vision_model or profile_settings.get("vision_model") or os.getenv("LM_STUDIO_VISION_MODEL", "llava-7b-q4")
+    whisper_model = args.whisper_model or profile_settings.get("whisper_model") or os.getenv("WHISPER_MODEL", "small")
+    vision_on_cpu = profile_settings.get("vision_on_cpu", False)
     
     # OpenAI backward compatibility
     api_key = args.api_key or os.getenv("OPENAI_API_KEY")
@@ -149,10 +189,13 @@ Examples:
         print("=" * 60)
         print("Meeting Analyzer - Local AI Analysis")
         print("=" * 60)
+        if profile_name and profile_name != "custom":
+            print(f"Hardware Profile: {profile_name}")
+            print(f"  {get_profile_description(profile_name)}")
         print(f"Configuration:")
         print(f"  LM Studio URL: {lm_studio_url}")
         print(f"  Text Model: {text_model}")
-        print(f"  Vision Model: {vision_model}")
+        print(f"  Vision Model: {vision_model} {'(CPU mode)' if vision_on_cpu else '(GPU mode)'}")
         print(f"  Whisper Model: {whisper_model}")
         if api_key and openai_model:
             print(f"  OpenAI Fallback: Enabled (using {openai_model})")
@@ -164,6 +207,7 @@ Examples:
             text_model=text_model,
             vision_model=vision_model,
             whisper_model=whisper_model,
+            vision_on_cpu=vision_on_cpu,
             output_dir=args.output,
             openai_api_key=api_key,
             openai_model=openai_model,

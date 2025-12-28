@@ -3,6 +3,23 @@
     "version": "1.0.0",
     "description": "AI-powered meeting analyzer for generating SRS documentation"
   },
+  "profile": "laptop",
+  "profiles": {
+    "laptop": {
+      "whisper_model": "small",
+      "vision_model": "llava-v1.6-mistral-7b",
+      "text_model": "phi-3-mini-4k-instruct",
+      "vision_on_cpu": true,
+      "description": "GTX 1050 Ti (4GB VRAM), 48GB RAM"
+    },
+    "pc": {
+      "whisper_model": "large-v3",
+      "vision_model": "llava-v1.6-34b",
+      "text_model": "llama-3.1-70b-instruct",
+      "vision_on_cpu": false,
+      "description": "RTX 4090 (24GB VRAM), 96GB RAM"
+    }
+  },
   "default_settings": {
     "lm_studio_url": "http://localhost:1234/v1",
     "lm_studio_model": "phi-3-mini",

@@ -102,16 +102,65 @@ cp .env.example .env
 
 2. Edit `.env` if you want to customize (optional):
 ```env
+# Hardware Profile: laptop or pc
+HARDWARE_PROFILE=laptop
+
 # LM Studio Configuration
 LM_STUDIO_URL=http://localhost:1234/v1
-LM_STUDIO_MODEL=phi-3-mini
-LM_STUDIO_VISION_MODEL=llava-7b-q4
 
-# Local Whisper Model (tiny/base/small/medium/large)
-WHISPER_MODEL=small
+# Override specific models (optional)
+# If not specified, profile settings will be used
+# WHISPER_MODEL=small
+# LM_STUDIO_MODEL=phi-3-mini-4k-instruct
+# LM_STUDIO_VISION_MODEL=llava-v1.6-mistral-7b
 ```
 
 ## Usage
+
+## Hardware Profiles
+
+Choose a profile based on your hardware to automatically configure optimal models:
+
+### Laptop Profile (4GB VRAM)
+Optimized for GTX 1050 Ti (4GB VRAM), 48GB RAM, i5-8300H
+
+```bash
+meeting-analyzer --video meeting.mp4 --profile laptop
+```
+
+**Models used:**
+- **Whisper**: small (GPU) - Fast transcription with good accuracy
+- **Vision**: LLaVA 7B (CPU) - Vision analysis using system RAM
+- **Text**: Phi-3 Mini (GPU) - Efficient requirements generation
+
+### PC Profile (24GB VRAM)
+Optimized for RTX 4090 (24GB VRAM), 96GB RAM, i7-12xxx
+
+```bash
+meeting-analyzer --video meeting.mp4 --profile pc
+```
+
+**Models used:**
+- **Whisper**: large-v3 (GPU) - Highest accuracy transcription
+- **Vision**: LLaVA 34B (GPU) - Advanced vision analysis
+- **Text**: Llama 3.1 70B (GPU) - Professional-grade requirements
+
+### Custom Settings
+Override individual settings while using a profile:
+
+```bash
+# Use laptop profile but upgrade Whisper model
+meeting-analyzer --video meeting.mp4 --profile laptop --whisper-model medium
+
+# Use PC profile with custom vision model
+meeting-analyzer --video meeting.mp4 --profile pc --vision-model llava-v1.6-mistral-7b
+```
+
+Or use custom profile for complete manual control:
+
+```bash
+meeting-analyzer --video meeting.mp4 --profile custom --whisper-model small --text-model phi-3-mini
+```
 
 ### Basic Usage
 
@@ -146,10 +195,11 @@ meeting-analyzer --video meeting.mp4 --max-frames 20
 
 ```
 --video VIDEO              Path to the meeting video file (required)
+--profile PROFILE         Hardware profile: laptop (4GB VRAM) / pc (24GB VRAM) / custom
 --lm-studio-url URL       LM Studio base URL (default: http://localhost:1234/v1)
---text-model MODEL        Text model name (default: phi-3-mini)
---vision-model MODEL      Vision model name (default: llava-7b-q4)
---whisper-model SIZE      Local Whisper model: tiny/base/small/medium/large (default: small)
+--text-model MODEL        Text model name (default: from profile or phi-3-mini)
+--vision-model MODEL      Vision model name (default: from profile or llava-7b-q4)
+--whisper-model SIZE      Local Whisper model: tiny/base/small/medium/large (default: from profile or small)
 --project PROJECT         Project name for SRS document
 --output OUTPUT           Output directory (default: ./output)
 --interval SECONDS        Frame extraction interval (default: 10)
