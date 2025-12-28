@@ -4,8 +4,10 @@
     "description": "AI-powered meeting analyzer for generating SRS documentation"
   },
   "default_settings": {
-    "openai_model": "gpt-4-turbo-preview",
-    "whisper_model": "whisper-1",
+    "lm_studio_url": "http://localhost:1234/v1",
+    "lm_studio_model": "phi-3-mini",
+    "lm_studio_vision_model": "llava-7b-q4",
+    "whisper_model": "small",
     "output_directory": "output",
     "frame_extraction": {
       "method": "key_frames",

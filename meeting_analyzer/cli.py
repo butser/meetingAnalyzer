@@ -18,12 +18,17 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Basic usage with video file
-  meeting-analyzer --video meeting.mp4 --api-key YOUR_API_KEY
-  
-  # Use environment variable for API key
-  export OPENAI_API_KEY=your_key
+  # Basic usage with local models (default)
   meeting-analyzer --video meeting.mp4
+  
+  # Specify custom LM Studio URL
+  meeting-analyzer --video meeting.mp4 --lm-studio-url http://localhost:1234/v1
+  
+  # Use different local Whisper model
+  meeting-analyzer --video meeting.mp4 --whisper-model medium
+  
+  # Specify custom text and vision models
+  meeting-analyzer --video meeting.mp4 --text-model llama-3.2-3b --vision-model llava-7b
   
   # Specify project name and output directory
   meeting-analyzer --video meeting.mp4 --project "My Project" --output ./results
@@ -40,12 +45,28 @@ Examples:
         help="Path to the meeting video file"
     )
     
-    # Optional arguments
+    # LM Studio / Local AI options
     parser.add_argument(
-        "--api-key",
-        help="OpenAI API key (or set OPENAI_API_KEY environment variable)"
+        "--lm-studio-url",
+        help="LM Studio base URL (default: http://localhost:1234/v1 or LM_STUDIO_URL env var)"
     )
     
+    parser.add_argument(
+        "--text-model",
+        help="Text model name for LM Studio (default: phi-3-mini or LM_STUDIO_MODEL env var)"
+    )
+    
+    parser.add_argument(
+        "--vision-model",
+        help="Vision model name for LM Studio (default: llava-7b-q4 or LM_STUDIO_VISION_MODEL env var)"
+    )
+    
+    parser.add_argument(
+        "--whisper-model",
+        help="Local Whisper model size: tiny, base, small, medium, large (default: small or WHISPER_MODEL env var)"
+    )
+    
+    # Output options
     parser.add_argument(
         "--project",
         default="Meeting Project",
@@ -58,18 +79,7 @@ Examples:
         help="Output directory for generated files (default: ./output)"
     )
     
-    parser.add_argument(
-        "--model",
-        default="gpt-4-turbo-preview",
-        help="OpenAI model to use (default: gpt-4-turbo-preview)"
-    )
-    
-    parser.add_argument(
-        "--whisper-model",
-        default="whisper-1",
-        help="Whisper model for transcription (default: whisper-1)"
-    )
-    
+    # Frame extraction options
     parser.add_argument(
         "--interval",
         type=int,
@@ -94,7 +104,23 @@ Examples:
         "--max-analyze",
         type=int,
         default=10,
-        help="Maximum number of frames to analyze with AI for cost control (default: 10)"
+        help="Maximum number of frames to analyze with AI (default: 10)"
+    )
+    
+    # Backward compatibility: OpenAI options (optional)
+    parser.add_argument(
+        "--api-key",
+        help="OpenAI API key (optional, for backward compatibility with OpenAI)"
+    )
+    
+    parser.add_argument(
+        "--model",
+        help="OpenAI model to use (optional, for backward compatibility)"
+    )
+    
+    parser.add_argument(
+        "--openai-whisper",
+        help="Use OpenAI Whisper API instead of local (requires --api-key)"
     )
     
     args = parser.parse_args()
@@ -102,17 +128,16 @@ Examples:
     # Load environment variables from .env file
     load_dotenv()
     
-    # Get API key from args or environment
-    api_key = args.api_key or os.getenv("OPENAI_API_KEY")
+    # Get configuration from args or environment variables
+    lm_studio_url = args.lm_studio_url or os.getenv("LM_STUDIO_URL", "http://localhost:1234/v1")
+    text_model = args.text_model or os.getenv("LM_STUDIO_MODEL", "phi-3-mini")
+    vision_model = args.vision_model or os.getenv("LM_STUDIO_VISION_MODEL", "llava-7b-q4")
+    whisper_model = args.whisper_model or os.getenv("WHISPER_MODEL", "small")
     
-    if not api_key:
-        print("Error: OpenAI API key required!")
-        print("Provide it via --api-key argument or OPENAI_API_KEY environment variable")
-        print("\nSet up:")
-        print("  1. Copy .env.example to .env")
-        print("  2. Add your OpenAI API key to .env")
-        print("  3. Run the command again")
-        sys.exit(1)
+    # OpenAI backward compatibility
+    api_key = args.api_key or os.getenv("OPENAI_API_KEY")
+    openai_model = args.model or os.getenv("OPENAI_MODEL")
+    openai_whisper = args.openai_whisper
     
     # Check if video file exists
     if not os.path.exists(args.video):
@@ -121,12 +146,28 @@ Examples:
     
     # Create analyzer and run
     try:
+        print("=" * 60)
+        print("Meeting Analyzer - Local AI Analysis")
+        print("=" * 60)
+        print(f"Configuration:")
+        print(f"  LM Studio URL: {lm_studio_url}")
+        print(f"  Text Model: {text_model}")
+        print(f"  Vision Model: {vision_model}")
+        print(f"  Whisper Model: {whisper_model}")
+        if api_key and openai_model:
+            print(f"  OpenAI Fallback: Enabled (using {openai_model})")
+        print()
+        
         analyzer = MeetingAnalyzer(
             video_path=args.video,
-            openai_api_key=api_key,
+            lm_studio_url=lm_studio_url,
+            text_model=text_model,
+            vision_model=vision_model,
+            whisper_model=whisper_model,
             output_dir=args.output,
-            openai_model=args.model,
-            whisper_model=args.whisper_model
+            openai_api_key=api_key,
+            openai_model=openai_model,
+            openai_whisper_model=openai_whisper
         )
         
         results = analyzer.analyze(
