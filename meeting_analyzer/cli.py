@@ -119,8 +119,8 @@ Examples:
     )
     
     parser.add_argument(
-        "--openai-whisper",
-        help="Use OpenAI Whisper API instead of local (requires --api-key)"
+        "--openai-whisper-model",
+        help="OpenAI Whisper model name to use instead of local (requires --api-key)"
     )
     
     args = parser.parse_args()
@@ -137,7 +137,7 @@ Examples:
     # OpenAI backward compatibility
     api_key = args.api_key or os.getenv("OPENAI_API_KEY")
     openai_model = args.model or os.getenv("OPENAI_MODEL")
-    openai_whisper = args.openai_whisper
+    openai_whisper = args.openai_whisper_model
     
     # Check if video file exists
     if not os.path.exists(args.video):

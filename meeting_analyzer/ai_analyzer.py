@@ -36,7 +36,10 @@ class AIAnalyzer:
                 api_key="lm-studio"  # Placeholder, not validated by LM Studio
             )
         except ImportError:
-            raise ImportError("OpenAI library not installed. Install with: pip install openai")
+            raise ImportError(
+                "OpenAI client library required for LM Studio compatibility. "
+                "Install with: pip install openai"
+            )
     
     def encode_image(self, image_path: str) -> str:
         """

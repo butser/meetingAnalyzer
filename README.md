@@ -252,11 +252,14 @@ meetingAnalyzer/
 ## Requirements
 
 See `requirements.txt` for full dependency list:
+- `openai` - OpenAI client library (required for LM Studio compatibility)
 - `faster-whisper` - Local Whisper transcription
 - `opencv-python` - Video processing
 - `python-docx` - DOCX generation
 - `Pillow` - Image processing
 - `python-dotenv` - Environment variable management
+
+**Note:** While we use the `openai` Python package, it's configured to connect to LM Studio (local), not OpenAI's cloud services. No OpenAI API key or internet connection required.
 
 ## Advantages of Local Processing
 
