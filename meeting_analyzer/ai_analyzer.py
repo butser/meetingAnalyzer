@@ -30,6 +30,7 @@ class AIAnalyzer:
         self.text_model = text_model
         self.vision_model = vision_model
         self.vision_on_cpu = vision_on_cpu
+        self._cpu_mode_warned = False  # Track if we've shown the CPU mode message
         
         try:
             # Use OpenAI client library with LM Studio endpoint
@@ -70,8 +71,9 @@ class AIAnalyzer:
         results = []
         
         print(f"Analyzing {len(frame_paths)} frames...")
-        if self.vision_on_cpu:
+        if self.vision_on_cpu and not self._cpu_mode_warned:
             print("  Note: Using CPU mode for vision analysis (may be slower)")
+            self._cpu_mode_warned = True
         
         for i, frame_path in enumerate(frame_paths):
             print(f"  Analyzing frame {i+1}/{len(frame_paths)}: {frame_path}")

@@ -148,6 +148,13 @@ Examples:
     # Get profile from args or environment
     profile_name = args.profile or os.getenv("HARDWARE_PROFILE")
     
+    # Validate profile name if provided via environment variable
+    if profile_name and not args.profile and profile_name not in ["laptop", "pc", "custom"]:
+        print(f"Warning: Invalid profile '{profile_name}' in HARDWARE_PROFILE environment variable.")
+        print(f"  Valid profiles: laptop, pc, custom")
+        print("  Continuing with default settings")
+        profile_name = None
+    
     # Load profile settings if specified
     profile_settings = {}
     if profile_name and profile_name != "custom":
