@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyc
 *$py.class
 *.so
 .Python
@@ -45,3 +46,8 @@ output/
 temp/
 tmp/
 *.tmp
+
+# Test files
+.pytest_cache/
+.coverage
+htmlcov/
