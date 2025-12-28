@@ -238,6 +238,7 @@ This document was automatically generated and should be reviewed and refined by 
             
         except ImportError:
             print("python-docx not installed, skipping DOCX generation")
+            print("Install with: pip install python-docx")
             return None
     
     def save_json(self, requirements: Dict, project_name: str = "Project") -> str:

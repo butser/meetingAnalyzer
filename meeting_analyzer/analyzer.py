@@ -55,6 +55,7 @@ class MeetingAnalyzer:
                 extract_frames_interval: int = 10,
                 extract_key_frames: bool = True,
                 max_key_frames: int = 15,
+                max_frames_to_analyze: int = 10,
                 project_name: str = "Meeting Project") -> dict:
         """
         Run the complete analysis pipeline
@@ -63,6 +64,7 @@ class MeetingAnalyzer:
             extract_frames_interval: Interval in seconds for frame extraction
             extract_key_frames: Whether to extract key frames based on scene changes
             max_key_frames: Maximum number of key frames to extract
+            max_frames_to_analyze: Maximum number of frames to send to AI for analysis (cost control)
             project_name: Name of the project for SRS document
             
         Returns:
@@ -130,8 +132,10 @@ class MeetingAnalyzer:
         print("-" * 60)
         try:
             if frame_paths:
-                # Limit frames for cost efficiency
-                frames_to_analyze = frame_paths[:10]  # Analyze up to 10 frames
+                # Limit frames for cost efficiency (configurable)
+                frames_to_analyze = frame_paths[:max_frames_to_analyze]
+                if len(frame_paths) > max_frames_to_analyze:
+                    print(f"Note: Analyzing {max_frames_to_analyze} of {len(frame_paths)} frames for cost efficiency")
                 frame_analyses = self.ai_analyzer.analyze_frames(frames_to_analyze)
                 self.results['frame_analyses'] = frame_analyses
                 print(f"✓ Analyzed {len(frame_analyses)} frames")

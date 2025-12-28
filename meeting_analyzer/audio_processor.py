@@ -63,8 +63,8 @@ class AudioProcessor:
             return audio_path
             
         except subprocess.CalledProcessError as e:
-            # Fallback: try without ffmpeg if not available
-            print("ffmpeg not available, audio extraction skipped")
+            # Audio extraction failed - ffmpeg may not be installed or video may not have audio
+            print("Audio extraction failed. Ensure ffmpeg is installed.")
             print("Note: Install ffmpeg for audio extraction support")
             return None
         except FileNotFoundError:

@@ -90,6 +90,13 @@ Examples:
         help="Maximum number of key frames to extract (default: 15)"
     )
     
+    parser.add_argument(
+        "--max-analyze",
+        type=int,
+        default=10,
+        help="Maximum number of frames to analyze with AI for cost control (default: 10)"
+    )
+    
     args = parser.parse_args()
     
     # Load environment variables from .env file
@@ -126,6 +133,7 @@ Examples:
             extract_frames_interval=args.interval,
             extract_key_frames=not args.no_key_frames,
             max_key_frames=args.max_frames,
+            max_frames_to_analyze=args.max_analyze,
             project_name=args.project
         )
         
