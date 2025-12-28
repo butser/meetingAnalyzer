@@ -72,9 +72,9 @@ class TestStructure(unittest.TestCase):
         # Should have at least some requirements
         self.assertGreater(len(lines), 5)
         
-        # Check for expected dependencies
+        # Check for expected dependencies (local AI providers + openai for LM Studio)
         content = ''.join(lines)
-        expected_deps = ['openai', 'opencv-python', 'python-docx']
+        expected_deps = ['faster-whisper', 'opencv-python', 'python-docx', 'openai']
         for dep in expected_deps:
             self.assertIn(dep, content, f"Expected dependency '{dep}' not found")
     

@@ -1,6 +1,11 @@
 # Core dependencies
-openai>=1.0.0
 python-dotenv>=1.0.0
+
+# OpenAI client library (required for LM Studio compatibility)
+openai>=1.0.0
+
+# Local AI providers
+faster-whisper>=0.9.0
 
 # Video processing
 opencv-python>=4.8.0

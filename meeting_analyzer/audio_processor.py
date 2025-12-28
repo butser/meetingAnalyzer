@@ -74,9 +74,91 @@ class AudioProcessor:
             print("Note: Install ffmpeg for audio extraction support")
             return None
     
+    def transcribe_audio_local(self, model: str = "small", device: str = "auto") -> dict:
+        """
+        Transcribe audio using local faster-whisper
+        
+        Args:
+            model: Whisper model size (tiny, base, small, medium, large)
+            device: Device to use ("auto", "cuda", "cpu")
+            
+        Returns:
+            Dictionary with transcription results
+        """
+        if not self.audio_path:
+            raise ValueError("No audio file available. Extract audio first.")
+        
+        try:
+            from faster_whisper import WhisperModel
+            
+            print(f"Transcribing audio using local Whisper ({model} model)...")
+            
+            # Auto-detect device if set to "auto"
+            if device == "auto":
+                try:
+                    import torch
+                    device = "cuda" if torch.cuda.is_available() else "cpu"
+                except ImportError:
+                    device = "cpu"
+            
+            compute_type = "float16" if device == "cuda" else "int8"
+            print(f"  Using device: {device} (compute type: {compute_type})")
+            
+            # Initialize model
+            model_instance = WhisperModel(model, device=device, compute_type=compute_type)
+            
+            # Transcribe
+            segments, info = model_instance.transcribe(
+                self.audio_path,
+                beam_size=5,
+                vad_filter=True,  # Voice activity detection
+                vad_parameters=dict(min_silence_duration_ms=500)
+            )
+            
+            # Collect segments
+            segment_list = []
+            full_text = []
+            
+            for segment in segments:
+                segment_data = {
+                    "start": segment.start,
+                    "end": segment.end,
+                    "text": segment.text
+                }
+                segment_list.append(segment_data)
+                full_text.append(segment.text)
+            
+            result = {
+                "text": " ".join(full_text),
+                "language": info.language,
+                "duration": info.duration,
+                "segments": segment_list
+            }
+            
+            print(f"Transcription complete. Length: {len(result['text'])} characters")
+            print(f"  Detected language: {info.language}")
+            print(f"  Duration: {info.duration:.2f}s")
+            
+            # Save transcription to file
+            transcript_path = os.path.join(
+                self.output_dir,
+                f"{Path(self.audio_path).stem}_transcript.json"
+            )
+            with open(transcript_path, 'w') as f:
+                json.dump(result, f, indent=2)
+            
+            print(f"Transcription saved to: {transcript_path}")
+            
+            return result
+            
+        except ImportError:
+            raise ImportError("faster-whisper not installed. Install with: pip install faster-whisper")
+        except Exception as e:
+            raise Exception(f"Transcription failed: {str(e)}")
+    
     def transcribe_audio_openai(self, api_key: str, model: str = "whisper-1") -> dict:
         """
-        Transcribe audio using OpenAI Whisper API
+        Transcribe audio using OpenAI Whisper API (backward compatibility)
         
         Args:
             api_key: OpenAI API key

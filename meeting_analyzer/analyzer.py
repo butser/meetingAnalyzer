@@ -18,25 +18,37 @@ class MeetingAnalyzer:
     
     def __init__(self, 
                  video_path: str,
-                 openai_api_key: str,
+                 lm_studio_url: str = "http://localhost:1234/v1",
+                 text_model: str = "phi-3-mini",
+                 vision_model: str = "llava-7b-q4",
+                 whisper_model: str = "small",
                  output_dir: str = "output",
-                 openai_model: str = "gpt-4-turbo-preview",
-                 whisper_model: str = "whisper-1"):
+                 openai_api_key: Optional[str] = None,
+                 openai_model: Optional[str] = None,
+                 openai_whisper_model: Optional[str] = None):
         """
         Initialize the meeting analyzer
         
         Args:
             video_path: Path to the meeting video file
-            openai_api_key: OpenAI API key for transcription and analysis
+            lm_studio_url: LM Studio base URL (default: http://localhost:1234/v1)
+            text_model: Text model name for LM Studio (default: phi-3-mini)
+            vision_model: Vision model name for LM Studio (default: llava-7b-q4)
+            whisper_model: Local Whisper model size (default: small)
             output_dir: Directory for output files
-            openai_model: OpenAI model to use for analysis
-            whisper_model: Whisper model for transcription
+            openai_api_key: OpenAI API key (optional, for backward compatibility)
+            openai_model: OpenAI model to use (optional, for backward compatibility)
+            openai_whisper_model: OpenAI Whisper model (optional, for backward compatibility)
         """
         self.video_path = video_path
-        self.openai_api_key = openai_api_key
-        self.output_dir = output_dir
-        self.openai_model = openai_model
+        self.lm_studio_url = lm_studio_url
+        self.text_model = text_model
+        self.vision_model = vision_model
         self.whisper_model = whisper_model
+        self.output_dir = output_dir
+        self.openai_api_key = openai_api_key
+        self.openai_model = openai_model
+        self.openai_whisper_model = openai_whisper_model
         
         # Create output directories
         os.makedirs(output_dir, exist_ok=True)
@@ -46,7 +58,7 @@ class MeetingAnalyzer:
         # Initialize processors
         self.video_processor = VideoProcessor(video_path, self.frames_dir)
         self.audio_processor = AudioProcessor(video_path, self.audio_dir)
-        self.ai_analyzer = AIAnalyzer(openai_api_key, openai_model)
+        self.ai_analyzer = AIAnalyzer(lm_studio_url, text_model, vision_model)
         self.srs_generator = SRSGenerator(output_dir)
         
         self.results = {}
@@ -64,7 +76,7 @@ class MeetingAnalyzer:
             extract_frames_interval: Interval in seconds for frame extraction
             extract_key_frames: Whether to extract key frames based on scene changes
             max_key_frames: Maximum number of key frames to extract
-            max_frames_to_analyze: Maximum number of frames to send to AI for analysis (cost control)
+            max_frames_to_analyze: Maximum number of frames to send to AI for analysis
             project_name: Name of the project for SRS document
             
         Returns:
@@ -107,10 +119,17 @@ class MeetingAnalyzer:
             audio_path = self.audio_processor.extract_audio()
             
             if audio_path:
-                transcription = self.audio_processor.transcribe_audio_openai(
-                    self.openai_api_key,
-                    self.whisper_model
-                )
+                # Use local whisper by default, fallback to OpenAI if configured
+                if self.openai_api_key and self.openai_whisper_model:
+                    print("Using OpenAI Whisper (backward compatibility mode)")
+                    transcription = self.audio_processor.transcribe_audio_openai(
+                        self.openai_api_key,
+                        self.openai_whisper_model
+                    )
+                else:
+                    transcription = self.audio_processor.transcribe_audio_local(
+                        self.whisper_model
+                    )
                 self.results['transcription'] = transcription
                 print(f"✓ Transcription complete: {len(transcription['text'])} characters")
             else:
@@ -132,10 +151,10 @@ class MeetingAnalyzer:
         print("-" * 60)
         try:
             if frame_paths:
-                # Limit frames for cost efficiency (configurable)
+                # Limit frames for efficiency
                 frames_to_analyze = frame_paths[:max_frames_to_analyze]
                 if len(frame_paths) > max_frames_to_analyze:
-                    print(f"Note: Analyzing {max_frames_to_analyze} of {len(frame_paths)} frames for cost efficiency")
+                    print(f"Note: Analyzing {max_frames_to_analyze} of {len(frame_paths)} frames")
                 frame_analyses = self.ai_analyzer.analyze_frames(frames_to_analyze)
                 self.results['frame_analyses'] = frame_analyses
                 print(f"✓ Analyzed {len(frame_analyses)} frames")

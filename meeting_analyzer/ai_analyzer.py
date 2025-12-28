@@ -12,22 +12,34 @@ from pathlib import Path
 class AIAnalyzer:
     """Uses AI to analyze meeting content and extract requirements"""
     
-    def __init__(self, api_key: str, model: str = "gpt-4-turbo-preview"):
+    def __init__(self, 
+                 lm_studio_url: str = "http://localhost:1234/v1",
+                 text_model: str = "phi-3-mini",
+                 vision_model: str = "llava-7b-q4"):
         """
-        Initialize the AI analyzer
+        Initialize the AI analyzer with LM Studio
         
         Args:
-            api_key: OpenAI API key
-            model: OpenAI model to use
+            lm_studio_url: LM Studio base URL (default: http://localhost:1234/v1)
+            text_model: Text model name (default: phi-3-mini)
+            vision_model: Vision model name (default: llava-7b-q4)
         """
-        self.api_key = api_key
-        self.model = model
+        self.lm_studio_url = lm_studio_url
+        self.text_model = text_model
+        self.vision_model = vision_model
         
         try:
+            # Use OpenAI client library with LM Studio endpoint
             from openai import OpenAI
-            self.client = OpenAI(api_key=api_key)
+            self.client = OpenAI(
+                base_url=lm_studio_url,
+                api_key="lm-studio"  # Placeholder, not validated by LM Studio
+            )
         except ImportError:
-            raise ImportError("OpenAI library not installed. Install with: pip install openai")
+            raise ImportError(
+                "OpenAI client library required for LM Studio compatibility. "
+                "Install with: pip install openai"
+            )
     
     def encode_image(self, image_path: str) -> str:
         """
@@ -62,12 +74,9 @@ class AIAnalyzer:
             try:
                 base64_image = self.encode_image(frame_path)
                 
-                # Select appropriate model for vision analysis
-                # GPT-4o and GPT-4 Turbo support vision
-                vision_model = "gpt-4o" if "gpt-4o" in self.model.lower() else "gpt-4-turbo"
-                
+                # Use the configured vision model (LLaVA, etc.)
                 response = self.client.chat.completions.create(
-                    model=vision_model,
+                    model=self.vision_model,
                     messages=[
                         {
                             "role": "user",
@@ -177,7 +186,7 @@ Provide a comprehensive but concise analysis in JSON format."""
 
         try:
             response = self.client.chat.completions.create(
-                model=self.model,
+                model=self.text_model,
                 messages=[
                     {
                         "role": "system",
